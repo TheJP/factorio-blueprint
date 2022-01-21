@@ -4,15 +4,15 @@ use serde_with::skip_serializing_none;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct BlueprintContainer {
-    blueprint: Blueprint,
+    pub blueprint: Blueprint,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Blueprint {
-    entities: Vec<Entity>,
-    version: u64,
-    item: Item,
-    icons: Vec<Icon>,
+    pub entities: Vec<Entity>,
+    pub version: u64,
+    pub item: Item,
+    pub icons: Vec<Icon>,
 }
 
 /// Forces item to be set to "blueprint".
@@ -25,28 +25,28 @@ pub enum Item {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Icon {
-    index: u32,
-    signal: Signal,
+    pub index: u32,
+    pub signal: Signal,
 }
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Entity {
-    entity_number: u32,
-    name: String,
-    position: Position,
+    pub entity_number: u32,
+    pub name: String,
+    pub position: Position,
 
     #[serde(default)]
-    direction: Option<Direction>,
+    pub direction: Option<Direction>,
 
     #[serde(default)]
-    connections: Option<Connection>,
+    pub connections: Option<Connection>,
 
     #[serde(default)]
-    control_behavior: Option<ControlBehavior>,
+    pub control_behavior: Option<ControlBehavior>,
 
     #[serde(default)]
-    neighbours: Option<Vec<u32>>,
+    pub neighbours: Option<Vec<u32>>,
 }
 
 #[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
@@ -64,8 +64,8 @@ pub enum Direction {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Position {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 #[skip_serializing_none]
@@ -73,33 +73,33 @@ pub struct Position {
 pub struct Connection {
     #[serde(rename = "1")]
     #[serde(default)]
-    connection1: Option<ConnectionPoint>,
+    pub connection1: Option<ConnectionPoint>,
 
     #[serde(rename = "2")]
     #[serde(default)]
-    connection2: Option<ConnectionPoint>,
+    pub connection2: Option<ConnectionPoint>,
 }
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct ConnectionPoint {
     #[serde(default)]
-    green: Option<Vec<ConnectionData>>,
+    pub green: Option<Vec<ConnectionData>>,
 
     #[serde(default)]
-    red: Option<Vec<ConnectionData>>,
+    pub red: Option<Vec<ConnectionData>>,
 }
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct ConnectionData {
     /// Id (also called entity_number) of the target of the connection.
-    entity_id: u32,
+    pub entity_id: u32,
 
     /// Used for targets with multiple possible connection points,
     /// to determine where this wire connects to.
     #[serde(default)]
-    circuit_id: Option<CircuitId>,
+    pub circuit_id: Option<CircuitId>,
 }
 
 #[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
@@ -113,19 +113,19 @@ pub enum CircuitId {
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct ControlBehavior {
     #[serde(default)]
-    decider_conditions: Option<DeciderCondition>,
+    pub decider_conditions: Option<DeciderCondition>,
 
     #[serde(default)]
-    arithmetic_conditions: Option<ArithmeticCondition>,
+    pub arithmetic_conditions: Option<ArithmeticCondition>,
 }
 
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Signal {
-    name: String,
+    pub name: String,
 
     #[serde(rename = "type")]
-    signal_type: SignalType,
+    pub signal_type: SignalType,
 }
 
 
@@ -140,21 +140,21 @@ pub enum SignalType {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct DeciderCondition {
-    comparator: Comparator,
-    copy_count_from_input: bool,
+    pub comparator: Comparator,
+    pub copy_count_from_input: bool,
 
     #[serde(default)]
-    constant: Option<i32>,
+    pub constant: Option<i32>,
 
 
     #[serde(default)]
-    first_signal: Option<Signal>,
+    pub first_signal: Option<Signal>,
 
     #[serde(default)]
-    second_signal: Option<Signal>,
+    pub second_signal: Option<Signal>,
 
     #[serde(default)]
-    output_signal: Option<Signal>,
+    pub output_signal: Option<Signal>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -188,22 +188,22 @@ pub enum Comparator {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct ArithmeticCondition {
-    operation: Operation,
+    pub operation: Operation,
 
     #[serde(default)]
-    first_constant: Option<i32>,
+    pub first_constant: Option<i32>,
 
     #[serde(default)]
-    second_constant: Option<i32>,
+    pub second_constant: Option<i32>,
 
     #[serde(default)]
-    first_signal: Option<Signal>,
+    pub first_signal: Option<Signal>,
 
     #[serde(default)]
-    second_signal: Option<Signal>,
+    pub second_signal: Option<Signal>,
 
     #[serde(default)]
-    output_signal: Option<Signal>,
+    pub output_signal: Option<Signal>,
 }
 
 
