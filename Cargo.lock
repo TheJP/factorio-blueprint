@@ -85,6 +85,9 @@ dependencies = [
 [[package]]
 name = "factorio-blueprint-cli"
 version = "0.1.0"
+dependencies = [
+ "factorio-blueprint",
+]
 
 [[package]]
 name = "flate2"
