@@ -69,10 +69,14 @@ pub fn blueprint_string_to_json(blueprint: &str) -> Result<serde_json::Value> {
         .or(Err(BlueprintError::JsonDecode))
 }
 
-pub fn blueprint_string_to_raw_model(blueprint: &str) -> Result<BlueprintContainer> {
+pub fn blueprint_string_to_pretty_json(blueprint: &str) -> Result<String> {
     let json = blueprint_string_to_json(blueprint)?;
-    let pretty = serde_json::to_string_pretty(&json)
-        .or(Err(BlueprintError::JsonEncode))?;
+    serde_json::to_string_pretty(&json)
+        .or(Err(BlueprintError::JsonEncode))
+}
+
+pub fn blueprint_string_to_raw_model(blueprint: &str) -> Result<BlueprintContainer> {
+    let pretty = blueprint_string_to_pretty_json(blueprint)?;
 
     // Json Deserialize
     // Using pretty instead of the raw json string makes errors use more usefull line numbers.
