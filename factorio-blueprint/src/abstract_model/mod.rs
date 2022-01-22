@@ -1,4 +1,4 @@
-mod utility;
+pub mod utility;
 
 use crate::model::{self, CircuitId, ConnectionPoint};
 
@@ -19,33 +19,33 @@ pub enum Entity {
 
 #[derive(Clone, Debug)]
 pub struct DeciderCombinator {
-    id: usize,
-    position: model::Position,
-    direction: model::Direction,
+    pub id: usize,
+    pub position: model::Position,
+    pub direction: model::Direction,
 
-    connections: Vec<Connection>,
+    pub connections: Vec<Connection>,
 
-    condition: model::DeciderCondition,
+    pub condition: model::DeciderCondition,
 }
 
 #[derive(Clone, Debug)]
 pub struct ArithmeticCombinator {
-    id: usize,
-    position: model::Position,
-    direction: model::Direction,
+    pub id: usize,
+    pub position: model::Position,
+    pub direction: model::Direction,
 
-    connections: Vec<Connection>,
+    pub connections: Vec<Connection>,
 
-    condition: model::ArithmeticCondition,
+    pub condition: model::ArithmeticCondition,
 }
 
 #[derive(Clone, Debug)]
 pub struct ElectricPole {
-    id: usize,
-    pole_type: PoleType,
-    position: model::Position,
-    neighbours: Vec<usize>,
-    connections: Vec<Connection>,
+    pub id: usize,
+    pub pole_type: PoleType,
+    pub position: model::Position,
+    pub neighbours: Vec<usize>,
+    pub connections: Vec<Connection>,
 }
 
 #[derive(Clone, Debug)]
@@ -195,7 +195,7 @@ impl Entity {
     fn electric_pole(id: usize, pole_type: PoleType, e: model::Entity) -> Self {
         let neighbours = e
             .neighbours
-            .unwrap()
+            .unwrap_or(Vec::new())
             .into_iter()
             .map(|n| (n - 1) as usize)
             .collect();

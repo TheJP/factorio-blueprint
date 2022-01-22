@@ -146,7 +146,6 @@ pub struct DeciderCondition {
     #[serde(default)]
     pub constant: Option<i32>,
 
-
     #[serde(default)]
     pub first_signal: Option<Signal>,
 

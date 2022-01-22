@@ -1,5 +1,5 @@
-mod abstract_model;
-mod model;
+pub mod abstract_model;
+pub mod model;
 
 use core::fmt;
 use std::{
