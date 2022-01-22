@@ -11,41 +11,32 @@ pub struct Blueprint {
 
 #[derive(Clone, Debug)]
 pub enum Entity {
-    DeciderCombinator(DeciderCombinator),
-    ArithmeticCombinator(ArithmeticCombinator),
-    ElectricPole(ElectricPole),
+    DeciderCombinator {
+        id: usize,
+        position: model::Position,
+        direction: model::Direction,
+
+        connections: Vec<Connection>,
+
+        condition: model::DeciderCondition,
+    },
+    ArithmeticCombinator {
+        id: usize,
+        position: model::Position,
+        direction: model::Direction,
+
+        connections: Vec<Connection>,
+
+        condition: model::ArithmeticCondition,
+    },
+    ElectricPole {
+        id: usize,
+        pole_type: PoleType,
+        position: model::Position,
+        neighbours: Vec<usize>,
+        connections: Vec<Connection>,
+    },
     Unknown(model::Entity),
-}
-
-#[derive(Clone, Debug)]
-pub struct DeciderCombinator {
-    pub id: usize,
-    pub position: model::Position,
-    pub direction: model::Direction,
-
-    pub connections: Vec<Connection>,
-
-    pub condition: model::DeciderCondition,
-}
-
-#[derive(Clone, Debug)]
-pub struct ArithmeticCombinator {
-    pub id: usize,
-    pub position: model::Position,
-    pub direction: model::Direction,
-
-    pub connections: Vec<Connection>,
-
-    pub condition: model::ArithmeticCondition,
-}
-
-#[derive(Clone, Debug)]
-pub struct ElectricPole {
-    pub id: usize,
-    pub pole_type: PoleType,
-    pub position: model::Position,
-    pub neighbours: Vec<usize>,
-    pub connections: Vec<Connection>,
 }
 
 #[derive(Clone, Debug)]
@@ -130,38 +121,56 @@ impl Into<model::Entity> for Entity {
     fn into(self) -> model::Entity {
         match self {
             Self::Unknown(e) => e,
-            Self::DeciderCombinator(dc) => model::Entity {
-                entity_number: (dc.id + 1) as u32,
+            Self::DeciderCombinator {
+                id,
+                position,
+                direction,
+                connections,
+                condition,
+            } => model::Entity {
+                entity_number: (id + 1) as u32,
                 name: "decider-combinator".into(),
-                position: dc.position,
-                direction: Some(dc.direction),
+                position,
+                direction: Some(direction),
                 neighbours: None,
                 control_behavior: Some(model::ControlBehavior {
                     arithmetic_conditions: None,
-                    decider_conditions: Some(dc.condition),
+                    decider_conditions: Some(condition),
                 }),
-                connections: Connection::to_model(dc.connections),
+                connections: Connection::to_model(connections),
             },
-            Self::ArithmeticCombinator(ac) => model::Entity {
-                entity_number: (ac.id + 1) as u32,
+            Self::ArithmeticCombinator {
+                id,
+                position,
+                direction,
+                connections,
+                condition,
+            } => model::Entity {
+                entity_number: (id + 1) as u32,
                 name: "arithmetic-combinator".into(),
-                position: ac.position,
-                direction: Some(ac.direction),
+                position,
+                direction: Some(direction),
                 neighbours: None,
                 control_behavior: Some(model::ControlBehavior {
-                    arithmetic_conditions: Some(ac.condition),
+                    arithmetic_conditions: Some(condition),
                     decider_conditions: None,
                 }),
-                connections: Connection::to_model(ac.connections),
+                connections: Connection::to_model(connections),
             },
-            Self::ElectricPole(ep) => model::Entity {
-                entity_number: (ep.id + 1) as u32,
-                name: ep.pole_type.name().into(),
-                position: ep.position,
+            Self::ElectricPole {
+                id,
+                pole_type,
+                position,
+                neighbours,
+                connections,
+            } => model::Entity {
+                entity_number: (id + 1) as u32,
+                name: pole_type.name().into(),
+                position,
                 direction: None,
-                neighbours: Some(ep.neighbours.into_iter().map(|id| (id + 1) as u32).collect()),
+                neighbours: Some(neighbours.into_iter().map(|id| (id + 1) as u32).collect()),
                 control_behavior: None,
-                connections: Connection::to_model(ep.connections),
+                connections: Connection::to_model(connections),
             },
         }
     }
@@ -169,7 +178,7 @@ impl Into<model::Entity> for Entity {
 
 impl Entity {
     fn decider_combinator(id: usize, e: model::Entity) -> Self {
-        Entity::DeciderCombinator(DeciderCombinator {
+        Entity::DeciderCombinator {
             id,
             position: e.position,
             direction: e.direction.unwrap(),
@@ -177,11 +186,11 @@ impl Entity {
             connections: Connection::from_model(e.connections),
 
             condition: e.control_behavior.unwrap().decider_conditions.unwrap(),
-        })
+        }
     }
 
     fn arithmetic_combinator(id: usize, e: model::Entity) -> Self {
-        Entity::ArithmeticCombinator(ArithmeticCombinator {
+        Entity::ArithmeticCombinator {
             id,
             position: e.position,
             direction: e.direction.unwrap(),
@@ -189,7 +198,7 @@ impl Entity {
             connections: Connection::from_model(e.connections),
 
             condition: e.control_behavior.unwrap().arithmetic_conditions.unwrap(),
-        })
+        }
     }
 
     fn electric_pole(id: usize, pole_type: PoleType, e: model::Entity) -> Self {
@@ -199,14 +208,14 @@ impl Entity {
             .into_iter()
             .map(|n| (n - 1) as usize)
             .collect();
-        Entity::ElectricPole(ElectricPole {
+        Entity::ElectricPole {
             id,
             pole_type,
             neighbours,
             position: e.position,
 
             connections: Connection::from_model(e.connections),
-        })
+        }
     }
 }
 
@@ -331,7 +340,7 @@ impl Into<Option<CircuitId>> for Side {
 impl PoleType {
     pub fn name(&self) -> &'static str {
         match &self {
-            Self::Medium => "medium-electric-pole"
+            Self::Medium => "medium-electric-pole",
         }
     }
 }

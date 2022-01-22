@@ -1,8 +1,8 @@
-use std::{fmt, error::Error, collections::HashMap};
+use std::{collections::HashMap, error::Error, fmt};
 
 use crate::model::Position;
 
-use super::{Blueprint, Entity, Connection};
+use super::{Blueprint, Connection, Entity};
 
 #[derive(Debug, PartialEq)]
 pub enum UtilityError {
@@ -14,7 +14,10 @@ impl fmt::Display for UtilityError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::InvalidId(id) => write!(f, "id '{}' is invalid", id),
-            Self::DuplicateIds => write!(f, "received duplicate ids which is not allowed for this function"),
+            Self::DuplicateIds => write!(
+                f,
+                "received duplicate ids which is not allowed for this function"
+            ),
         }
     }
 }
@@ -68,36 +71,36 @@ impl Blueprint {
 impl Entity {
     pub fn id(&self) -> usize {
         match self {
-            Entity::DeciderCombinator(dc) => dc.id,
-            Entity::ArithmeticCombinator(ac) => ac.id,
-            Entity::ElectricPole(ep) => ep.id,
+            Entity::DeciderCombinator { id, .. }
+            | Entity::ArithmeticCombinator { id, .. }
+            | Entity::ElectricPole { id, .. } => *id,
             Entity::Unknown(e) => (e.entity_number - 1) as usize,
         }
     }
 
     fn update_id(&mut self, new_id: usize) {
         match self {
-            Entity::DeciderCombinator(e) => e.id = new_id,
-            Entity::ArithmeticCombinator(e) => e.id = new_id,
-            Entity::ElectricPole(e) => e.id = new_id,
+            Entity::DeciderCombinator { id, .. }
+            | Entity::ArithmeticCombinator { id, .. }
+            | Entity::ElectricPole { id, .. } => *id = new_id,
             Entity::Unknown(e) => e.entity_number = (new_id + 1) as u32,
         }
     }
 
     pub fn position(&self) -> &Position {
         match self {
-            Entity::DeciderCombinator(e) => &e.position,
-            Entity::ArithmeticCombinator(e) => &e.position,
-            Entity::ElectricPole(e) => &e.position,
+            Entity::DeciderCombinator { position, .. }
+            | Entity::ArithmeticCombinator { position, .. }
+            | Entity::ElectricPole { position, .. } => position,
             Entity::Unknown(e) => &e.position,
         }
     }
 
     pub fn position_mut(&mut self) -> &mut Position {
         match self {
-            Entity::DeciderCombinator(e) => &mut e.position,
-            Entity::ArithmeticCombinator(e) => &mut e.position,
-            Entity::ElectricPole(e) => &mut e.position,
+            Entity::DeciderCombinator { position, .. }
+            | Entity::ArithmeticCombinator { position, .. }
+            | Entity::ElectricPole { position, .. } => position,
             Entity::Unknown(e) => &mut e.position,
         }
     }
@@ -110,18 +113,22 @@ impl Entity {
         };
 
         match self {
-            Entity::DeciderCombinator(e) => update(&mut e.connections),
-            Entity::ArithmeticCombinator(e) => update(&mut e.connections),
-            Entity::ElectricPole(e) => {
-                update(&mut e.connections);
+            Entity::DeciderCombinator { connections, .. }
+            | Entity::ArithmeticCombinator { connections, .. } => update(connections),
+            Entity::ElectricPole {
+                connections,
+                neighbours,
+                ..
+            } => {
+                update(connections);
 
-                for neighbour in &mut e.neighbours {
+                for neighbour in neighbours {
                     if let Some(new_id) = id_map.get(&neighbour) {
                         *neighbour = *new_id;
                     }
                 }
-            },
-            Entity::Unknown(_) => {},
+            }
+            Entity::Unknown(_) => {}
         }
     }
 }
