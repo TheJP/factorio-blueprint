@@ -3,4 +3,9 @@
 members = [
     "factorio-blueprint",
     "factorio-blueprint-cli",
+    "generators/*",
+]
+
+default-members = [
+    "factorio-blueprint-cli",
 ]

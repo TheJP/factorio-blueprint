@@ -30,7 +30,7 @@ pub struct Icon {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Entity {
     pub entity_number: u32,
     pub name: String,
@@ -49,7 +49,7 @@ pub struct Entity {
     pub neighbours: Option<Vec<u32>>,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, PartialEq, Debug)]
 #[repr(u8)]
 pub enum Direction {
     North = 0,
@@ -62,14 +62,14 @@ pub enum Direction {
     NorthWest = 7,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Position {
     pub x: f32,
     pub y: f32,
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Connection {
     #[serde(rename = "1")]
     #[serde(default)]
@@ -81,7 +81,7 @@ pub struct Connection {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ConnectionPoint {
     #[serde(default)]
     pub green: Option<Vec<ConnectionData>>,
@@ -91,7 +91,7 @@ pub struct ConnectionPoint {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ConnectionData {
     /// Id (also called entity_number) of the target of the connection.
     pub entity_id: u32,
@@ -102,7 +102,7 @@ pub struct ConnectionData {
     pub circuit_id: Option<CircuitId>,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, Copy, Clone, PartialEq, Debug)]
 #[repr(u8)]
 pub enum CircuitId {
     One = 1,
@@ -110,7 +110,7 @@ pub enum CircuitId {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ControlBehavior {
     #[serde(default)]
     pub decider_conditions: Option<DeciderCondition>,
@@ -120,7 +120,7 @@ pub struct ControlBehavior {
 }
 
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Signal {
     pub name: String,
 
@@ -129,7 +129,7 @@ pub struct Signal {
 }
 
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum SignalType {
     #[serde(rename = "virtual")]
     Virtual,
@@ -138,7 +138,7 @@ pub enum SignalType {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct DeciderCondition {
     pub comparator: Comparator,
     pub copy_count_from_input: bool,
@@ -157,7 +157,7 @@ pub struct DeciderCondition {
     pub output_signal: Option<Signal>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum Comparator {
     /// Greater than (>)
     #[serde(rename = ">")]
@@ -186,7 +186,7 @@ pub enum Comparator {
 
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ArithmeticCondition {
     pub operation: Operation,
 
@@ -207,7 +207,7 @@ pub struct ArithmeticCondition {
 }
 
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum Operation {
     /// Addition (+)
     #[serde(rename = "+")]
