@@ -1,5 +1,5 @@
 use factorio_blueprint::{
-    abstract_model::Entity,
+    abstract_model::{Entity, Wire},
     blueprint_string_to_model,
     model::{DeciderCondition, Signal},
     model_to_blueprint_string, Result,
@@ -42,6 +42,8 @@ fn main() -> Result<()> {
                 Entity::ElectricPole { id, .. } => {
                     let id = *id;
                     blueprint.connect_electric_poles(last_electric_pole, id).unwrap();
+                    blueprint.connect_wire(last_electric_pole, id, Wire::Green).unwrap();
+                    blueprint.connect_wire(last_electric_pole, id, Wire::Red).unwrap();
                     last_electric_pole = id;
                 },
                 _ => {}

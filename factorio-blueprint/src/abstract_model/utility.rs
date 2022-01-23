@@ -1,13 +1,19 @@
-use std::{collections::HashMap, error::Error, fmt, cmp::{min, max}};
+use std::{
+    cmp::{max, min},
+    collections::HashMap,
+    error::Error,
+    fmt,
+};
 
 use crate::model::Position;
 
-use super::{Blueprint, Connection, Entity};
+use super::{Blueprint, Connection, Connector, Entity, Side, Wire};
 
 #[derive(Debug, PartialEq)]
 pub enum UtilityError {
     InvalidId(usize),
     DuplicateIds,
+    InvalidOperation,
 }
 
 impl fmt::Display for UtilityError {
@@ -18,6 +24,7 @@ impl fmt::Display for UtilityError {
                 f,
                 "received duplicate ids which is not allowed for this function"
             ),
+            Self::InvalidOperation => write!(f, "tried to perform an invalid operation"),
         }
     }
 }
@@ -25,6 +32,13 @@ impl fmt::Display for UtilityError {
 impl Error for UtilityError {}
 
 pub type Result<T> = core::result::Result<T, UtilityError>;
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum SideCount {
+    Zero,
+    One,
+    Two,
+}
 
 impl Blueprint {
     pub fn clone_entities(&mut self, ids: &Vec<usize>) -> Result<Vec<usize>> {
@@ -51,7 +65,7 @@ impl Blueprint {
             new_entities.push(entity);
         }
 
-        new_entities.sort_by(|a, b|a.id().cmp(&b.id()));
+        new_entities.sort_by(|a, b| a.id().cmp(&b.id()));
         self.entities.append(&mut new_entities);
 
         Ok(id_map.into_values().collect())
@@ -98,8 +112,14 @@ impl Blueprint {
 
         match (&mut left[id1], &mut right[0]) {
             (
-                Entity::ElectricPole { neighbours: neighbours1, .. },
-                Entity::ElectricPole { neighbours: neighbours2, .. },
+                Entity::ElectricPole {
+                    neighbours: neighbours1,
+                    ..
+                },
+                Entity::ElectricPole {
+                    neighbours: neighbours2,
+                    ..
+                },
             ) => {
                 if !neighbours1.contains(&id2) {
                     neighbours1.push(id2);
@@ -110,9 +130,63 @@ impl Blueprint {
                 }
 
                 Ok(())
-            },
+            }
             (Entity::ElectricPole { .. }, _) => Err(UtilityError::InvalidId(id2)),
             _ => Err(UtilityError::InvalidId(id1)),
+        }
+    }
+
+    pub fn connect_wire(&mut self, id1: usize, id2: usize, wire: Wire) -> Result<()> {
+        self.connect_wire_with_side(
+            Connector {
+                id: id1,
+                side: Side::One,
+            },
+            Connector {
+                id: id2,
+                side: Side::One,
+            },
+            wire,
+        )
+    }
+
+    pub fn connect_wire_with_side(
+        &mut self,
+        c1: Connector,
+        c2: Connector,
+        wire: Wire,
+    ) -> Result<()> {
+        if c1.id == c2.id && c1.side == c2.side {
+            return Err(UtilityError::DuplicateIds);
+        }
+
+        if self.id_invalid(c1.id) || !self.entities[c1.id].can_connect(c1.side) {
+            return Err(UtilityError::InvalidId(c1.id));
+        }
+
+        if self.id_invalid(c2.id) || !self.entities[c2.id].can_connect(c2.side) {
+            return Err(UtilityError::InvalidId(c2.id));
+        }
+
+        let result1 = self.entities[c1.id].connections_mut().map(|cs| {
+            cs.push(Connection {
+                from_side: c1.side,
+                to: c2.clone(),
+                wire,
+            })
+        });
+
+        let result2 = self.entities[c2.id].connections_mut().map(|cs| {
+            cs.push(Connection {
+                from_side: c2.side,
+                to: c1.clone(),
+                wire,
+            })
+        });
+
+        match (result1, result2) {
+            (Some(_), Some(_)) => Ok(()),
+            _ => unreachable!(),
         }
     }
 }
@@ -151,6 +225,41 @@ impl Entity {
             | Entity::ArithmeticCombinator { position, .. }
             | Entity::ElectricPole { position, .. } => position,
             Entity::Unknown(e) => &mut e.position,
+        }
+    }
+
+    pub fn side_count(&self) -> SideCount {
+        match self {
+            Entity::DeciderCombinator { .. } | Entity::ArithmeticCombinator { .. } => {
+                SideCount::Two
+            }
+            Entity::ElectricPole { .. } => SideCount::One,
+            Entity::Unknown(_) => SideCount::Zero,
+        }
+    }
+
+    pub fn can_connect(&self, side: Side) -> bool {
+        match (self.side_count(), side) {
+            (SideCount::Two, _) | (SideCount::One, Side::One) => true,
+            _ => false,
+        }
+    }
+
+    pub fn connections(&self) -> Option<&Vec<Connection>> {
+        match self {
+            Entity::DeciderCombinator { connections, .. }
+            | Entity::ArithmeticCombinator { connections, .. }
+            | Entity::ElectricPole { connections, .. } => Some(connections),
+            Entity::Unknown(_) => None,
+        }
+    }
+
+    pub fn connections_mut(&mut self) -> Option<&mut Vec<Connection>> {
+        match self {
+            Entity::DeciderCombinator { connections, .. }
+            | Entity::ArithmeticCombinator { connections, .. }
+            | Entity::ElectricPole { connections, .. } => Some(connections),
+            Entity::Unknown(_) => None,
         }
     }
 
