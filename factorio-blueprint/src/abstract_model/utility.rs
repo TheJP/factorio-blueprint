@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fmt};
+use std::{collections::HashMap, error::Error, fmt, cmp::{min, max}};
 
 use crate::model::Position;
 
@@ -34,8 +34,8 @@ impl Blueprint {
 
         let mut next_id = self.entities.len();
         let mut id_map = HashMap::new();
-        for id in ids {
-            let had_value = id_map.insert(*id, next_id);
+        for &id in ids {
+            let had_value = id_map.insert(id, next_id);
             next_id += 1;
 
             if let Some(_) = had_value {
@@ -43,28 +43,77 @@ impl Blueprint {
             }
         }
 
-        for (old_id, new_id) in &id_map {
-            let mut entity = self.entities[*old_id].clone();
-            entity.update_id(*new_id);
+        let mut new_entities = Vec::new();
+        for (&old_id, &new_id) in &id_map {
+            let mut entity = self.entities[old_id].clone();
+            entity.update_id(new_id);
             entity.update_connections(&id_map);
-            self.entities.push(entity);
+            new_entities.push(entity);
         }
+
+        new_entities.sort_by(|a, b|a.id().cmp(&b.id()));
+        self.entities.append(&mut new_entities);
 
         Ok(id_map.into_values().collect())
     }
 
     fn contains_invalid_id(&self, ids: &Vec<usize>) -> Option<usize> {
-        for id in ids {
-            let id = *id;
-            if id >= self.entities.len() {
-                return Some(id);
-            }
-            if let Entity::Unknown(_) = self.entities[id] {
+        for &id in ids {
+            if self.id_invalid(id) {
                 return Some(id);
             }
         }
 
         None
+    }
+
+    fn id_invalid(&self, id: usize) -> bool {
+        if id >= self.entities.len() {
+            return true;
+        }
+
+        if let Entity::Unknown(_) = self.entities[id] {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn connect_electric_poles(&mut self, id1: usize, id2: usize) -> Result<()> {
+        if id1 == id2 {
+            return Err(UtilityError::DuplicateIds);
+        }
+
+        if self.id_invalid(id1) {
+            return Err(UtilityError::InvalidId(id1));
+        }
+
+        if self.id_invalid(id2) {
+            return Err(UtilityError::InvalidId(id2));
+        }
+
+        let (id1, id2) = (min(id1, id2), max(id1, id2));
+
+        let (left, right) = self.entities.split_at_mut(id2);
+
+        match (&mut left[id1], &mut right[0]) {
+            (
+                Entity::ElectricPole { neighbours: neighbours1, .. },
+                Entity::ElectricPole { neighbours: neighbours2, .. },
+            ) => {
+                if !neighbours1.contains(&id2) {
+                    neighbours1.push(id2);
+                }
+
+                if !neighbours2.contains(&id1) {
+                    neighbours2.push(id1);
+                }
+
+                Ok(())
+            },
+            (Entity::ElectricPole { .. }, _) => Err(UtilityError::InvalidId(id2)),
+            _ => Err(UtilityError::InvalidId(id1)),
+        }
     }
 }
 

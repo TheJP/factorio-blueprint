@@ -11,28 +11,43 @@ fn main() -> Result<()> {
     let mut blueprint = blueprint_string_to_model(BLUEPRINT_MEMORY_CELL)?;
     let memory_cell_ids: Vec<usize> = blueprint.entities.iter().map(|e| e.id()).collect();
 
+    let mut last_electric_pole = blueprint.entities.iter()
+        .find_map(|e| {
+            if let Entity::ElectricPole { id, .. } = e { Some(*id) }
+            else { None }
+        }).unwrap();
+
     for i in 1..=9 {
         let new_ids = blueprint.clone_entities(&memory_cell_ids).unwrap();
 
-        // Translate entites down
-        for id in &new_ids {
-            let position = blueprint.entities[*id].position_mut();
+        for &id in &new_ids {
+            // Translate entites down
+            let position = blueprint.entities[id].position_mut();
             position.y += (i as f32) * 2f32;
-        }
 
-        // Update read and write address
-        for id in &new_ids {
-            if let Entity::DeciderCombinator { condition, .. } = &mut blueprint.entities[*id] {
-                match condition {
-                    DeciderCondition {
-                        constant: Some(ref mut address),
-                        first_signal: Some(Signal { ref name, .. }),
-                        ..
-                    } if name == "signal-R" || name == "signal-W" => *address = i + 1,
-                    _ => {}
-                }
+            match &mut blueprint.entities[id] {
+                // Update read and write address
+                Entity::DeciderCombinator { condition, .. } =>
+                    match condition {
+                        DeciderCondition {
+                            constant: Some(ref mut address),
+                            first_signal: Some(Signal { ref name, .. }),
+                            ..
+                        } if name == "signal-R" || name == "signal-W" =>
+                            *address = i + 1,
+                        _ => {}
+                },
+
+                // Connect and wire electric poles
+                Entity::ElectricPole { id, .. } => {
+                    let id = *id;
+                    blueprint.connect_electric_poles(last_electric_pole, id).unwrap();
+                    last_electric_pole = id;
+                },
+                _ => {}
             }
         }
+
     }
 
     let blueprint = model_to_blueprint_string(blueprint)?;
