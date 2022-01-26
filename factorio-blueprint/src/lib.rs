@@ -104,7 +104,7 @@ pub fn raw_model_to_blueprint_string(raw_model: &BlueprintContainer) -> Result<S
     let json = raw_model_to_pretty_json(raw_model)?;
 
     // Zlib Deflate
-    let mut deflator = ZlibEncoder::new(Vec::new(), Compression::fast());
+    let mut deflator = ZlibEncoder::new(Vec::new(), Compression::best());
     deflator.write_all(json.as_bytes())
         .or(Err(BlueprintError::ZlibDeflate))?;
     let compressed = deflator.finish()
