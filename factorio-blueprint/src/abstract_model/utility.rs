@@ -196,6 +196,7 @@ impl Entity {
         match self {
             Entity::DeciderCombinator { id, .. }
             | Entity::ArithmeticCombinator { id, .. }
+            | Entity::ConstantCombinator { id, .. }
             | Entity::ElectricPole { id, .. } => *id,
             Entity::Unknown(e) => (e.entity_number - 1) as usize,
         }
@@ -205,6 +206,7 @@ impl Entity {
         match self {
             Entity::DeciderCombinator { id, .. }
             | Entity::ArithmeticCombinator { id, .. }
+            | Entity::ConstantCombinator { id, .. }
             | Entity::ElectricPole { id, .. } => *id = new_id,
             Entity::Unknown(e) => e.entity_number = (new_id + 1) as u32,
         }
@@ -214,6 +216,7 @@ impl Entity {
         match self {
             Entity::DeciderCombinator { position, .. }
             | Entity::ArithmeticCombinator { position, .. }
+            | Entity::ConstantCombinator { position, .. }
             | Entity::ElectricPole { position, .. } => position,
             Entity::Unknown(e) => &e.position,
         }
@@ -223,6 +226,7 @@ impl Entity {
         match self {
             Entity::DeciderCombinator { position, .. }
             | Entity::ArithmeticCombinator { position, .. }
+            | Entity::ConstantCombinator { position, .. }
             | Entity::ElectricPole { position, .. } => position,
             Entity::Unknown(e) => &mut e.position,
         }
@@ -230,9 +234,9 @@ impl Entity {
 
     pub fn side_count(&self) -> SideCount {
         match self {
-            Entity::DeciderCombinator { .. } | Entity::ArithmeticCombinator { .. } => {
-                SideCount::Two
-            }
+            Entity::DeciderCombinator { .. }
+            | Entity::ArithmeticCombinator { .. }
+            | Entity::ConstantCombinator { .. } => SideCount::Two,
             Entity::ElectricPole { .. } => SideCount::One,
             Entity::Unknown(_) => SideCount::Zero,
         }
@@ -249,6 +253,7 @@ impl Entity {
         match self {
             Entity::DeciderCombinator { connections, .. }
             | Entity::ArithmeticCombinator { connections, .. }
+            | Entity::ConstantCombinator { connections, .. }
             | Entity::ElectricPole { connections, .. } => Some(connections),
             Entity::Unknown(_) => None,
         }
@@ -258,6 +263,7 @@ impl Entity {
         match self {
             Entity::DeciderCombinator { connections, .. }
             | Entity::ArithmeticCombinator { connections, .. }
+            | Entity::ConstantCombinator { connections, .. }
             | Entity::ElectricPole { connections, .. } => Some(connections),
             Entity::Unknown(_) => None,
         }
@@ -272,7 +278,8 @@ impl Entity {
 
         match self {
             Entity::DeciderCombinator { connections, .. }
-            | Entity::ArithmeticCombinator { connections, .. } => update(connections),
+            | Entity::ArithmeticCombinator { connections, .. }
+            | Entity::ConstantCombinator { connections, .. } => update(connections),
             Entity::ElectricPole {
                 connections,
                 neighbours,

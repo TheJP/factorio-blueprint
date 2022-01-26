@@ -117,6 +117,9 @@ pub struct ControlBehavior {
 
     #[serde(default)]
     pub arithmetic_conditions: Option<ArithmeticCondition>,
+
+    #[serde(default)]
+    pub filters: Option<Vec<ConstantCondition>>,
 }
 
 
@@ -251,4 +254,12 @@ pub enum Operation {
     /// Bitwise XOR (^)
     #[serde(rename = "XOR")]
     Xor,
+}
+
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct ConstantCondition {
+    pub count: i32,
+    pub index: u8, // only values in range (0,21] are valid
+    pub signal: Signal,
 }

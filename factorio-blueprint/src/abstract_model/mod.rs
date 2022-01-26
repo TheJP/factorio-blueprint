@@ -29,6 +29,15 @@ pub enum Entity {
 
         condition: model::ArithmeticCondition,
     },
+    ConstantCombinator {
+        id: usize,
+        position: model::Position,
+        direction: model::Direction,
+
+        connections: Vec<Connection>,
+
+        condition: Vec<model::ConstantCondition>,
+    },
     ElectricPole {
         id: usize,
         pole_type: PoleType,
@@ -111,6 +120,7 @@ impl From<model::Entity> for Entity {
         match e.name.as_str() {
             "decider-combinator" => Self::decider_combinator(id, e),
             "arithmetic-combinator" => Self::arithmetic_combinator(id, e),
+            "constant-combinator" => Self::constant_combinator(id, e),
             "medium-electric-pole" => Self::electric_pole(id, PoleType::Medium, e),
             _ => Entity::Unknown(e),
         }
@@ -136,6 +146,7 @@ impl Into<model::Entity> for Entity {
                 control_behavior: Some(model::ControlBehavior {
                     arithmetic_conditions: None,
                     decider_conditions: Some(condition),
+                    filters: None,
                 }),
                 connections: Connection::to_model(connections),
             },
@@ -154,6 +165,28 @@ impl Into<model::Entity> for Entity {
                 control_behavior: Some(model::ControlBehavior {
                     arithmetic_conditions: Some(condition),
                     decider_conditions: None,
+                    filters: None,
+                }),
+                connections: Connection::to_model(connections),
+            },
+            Self::ConstantCombinator {
+                id,
+                position,
+                direction,
+                connections,
+                condition,
+            } => model::Entity {
+                entity_number: (id + 1) as u32,
+                name: "constant-combinator".into(),
+                position,
+                direction: Some(direction),
+                neighbours: None,
+                control_behavior: Some(model::ControlBehavior {
+                    arithmetic_conditions: None,
+                    decider_conditions: None,
+                    filters:
+                        if condition.is_empty() { None }
+                        else { Some(condition) },
                 }),
                 connections: Connection::to_model(connections),
             },
@@ -198,6 +231,18 @@ impl Entity {
             connections: Connection::from_model(e.connections),
 
             condition: e.control_behavior.unwrap().arithmetic_conditions.unwrap(),
+        }
+    }
+
+    fn constant_combinator(id: usize, e: model::Entity) -> Self {
+        Entity::ConstantCombinator {
+            id,
+            position: e.position,
+            direction: e.direction.unwrap(),
+
+            connections: Connection::from_model(e.connections),
+
+            condition: e.control_behavior.unwrap().filters.unwrap(),
         }
     }
 
