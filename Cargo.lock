@@ -198,6 +198,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "memory-loader"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "factorio-blueprint",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
