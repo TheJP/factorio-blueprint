@@ -202,7 +202,7 @@ impl Entity {
         }
     }
 
-    fn update_id(&mut self, new_id: usize) {
+    pub fn update_id(&mut self, new_id: usize) {
         match self {
             Entity::DeciderCombinator { id, .. }
             | Entity::ArithmeticCombinator { id, .. }

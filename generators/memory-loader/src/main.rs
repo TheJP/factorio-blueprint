@@ -1,9 +1,15 @@
 use std::{fs, io};
 
 use clap::{Arg, App};
-use factorio_blueprint::{blueprint_string_to_model, abstract_model::{Entity, PoleType, Wire, Connector, Side, Blueprint}, model, model_to_blueprint_string};
+use factorio_blueprint::{
+    blueprint_string_to_model,
+    abstract_model::{Entity, PoleType, Wire, Connector, Side, Blueprint},
+    model,
+    model_to_blueprint_string
+};
 
 const LOADER_BLUEPRINT: &str = "0eNqVk91qwzAMhd9F126Zs6bZDHuOXYwS8qO2gkQOjlwWSt59djxKGV233gRkW+ccf3LOUHceB0csYM5AjeURzMcZRjpw1cU1mQYEAyTYgwKu+li12FCLbtXYviauxDqYFRC3+AlGz+pPgWgkFctthWzeKUAWEsKUZymmkn1fowsWd4UUDHYMvZajf9BbZZvtOlcwgSn0Og9GLTls0olMRRFxtitrPFYnCgqhbU+doPuFxomc+LByiZFOrA4OkeNFGusjUl1cUdkt68zJeIxyOn5S09UtqU2pyDWeZClj9xy5/gCR3RvJLQ4PUvhWLcNeS5fYe3KjlP+m8p6IpEEtwwshh8otIQ28hQbrZfAPSOIJ3SRH4kPSHqZyQV7une1L4iAGRpzH+RHoiXJ4e8tjNVc/h4JgOCZSL3pTvGZFrnP9vH2a5y806h5c";
+const CLOCK_BLUEPRINT: &str = "0eNqlk9tOwzAMht/F1xmiZQeIxHNwgVDVg7tZtEmVOhPV1HfHaTZUwdiGuImUOP78239ygKLx2DkyDPoAVFrTg349QE9bkzfhjIcOQQMxtqDA5G3YVVhShW5R2rYgk7N1MCogU+EH6GRUVwGhEOeGzxPS8U0BGiYmjHqmzZAZ3xbopMQlJQo620uqNaG84Bbpcq1gAL3e3K2kSkUOyxhPVZDCzjZZgbt8T5IvSUdqJrFqIvXhtCbXc/ajsz059nLypSneWJQ7LN9DV6dmJ90itMvdJFTDsyRZz53/A/YlIrtB1HnDWe1sm5ERBmh2HsdY0cQWJ+FJWLYO0cyHSVUURK70xNM2DdbNwmKE0NJb0xO5Ps4QJ7vSi76f80uM+ptjNTWM7pfHe2WU/mjNxfd7g8vfONMrpj4Lquu86fEfxsTJBl74Rnr2bRXspe84msdkuXlKN6tklTys78fxE0HyUOw=";
 
 #[derive(Debug)]
 struct Arguments {
@@ -71,16 +77,18 @@ fn raw_data_to_i32(mut raw_data: Vec<u8>) -> Vec<i32> {
 
 fn generate_loader(max_height: u32, data: &Vec<i32>) -> Blueprint {
     let mut blueprint = blueprint_string_to_model(LOADER_BLUEPRINT).unwrap();
+    assert_eq!(2, blueprint.entities.len());
 
     let loader_ids: Vec<usize> = blueprint.entities.iter().map(|e| e.id()).collect();
 
-    let (pole_base_x, pole_base_y) = blueprint.entities.iter().find_map(|e| match e {
+    let (base_x, base_y) = blueprint.entities.iter().find_map(|e| match e {
         Entity::ConstantCombinator {
             position: model::Position { x, y },
             ..
-        } => Some((x + 3f32, y + 1f32)),
+        } => Some((*x, *y)),
         _ => None,
     }).unwrap();
+    let (pole_base_x, pole_base_y) = (base_x + 3f32, base_y + 1f32);
 
     let mut y = 1;
     let mut x = 0;
@@ -156,7 +164,7 @@ fn generate_loader(max_height: u32, data: &Vec<i32>) -> Blueprint {
     };
 
     let mut top_deciders = Vec::new();
-    for row in rows {
+    for row in &rows {
         let mut last_decider = row[0];
         top_deciders.push(last_decider);
 
@@ -187,6 +195,38 @@ fn generate_loader(max_height: u32, data: &Vec<i32>) -> Blueprint {
             last_top_pole = top_pole;
         }
     }
+
+    // Add clock at the top
+    let clock = blueprint_string_to_model(CLOCK_BLUEPRINT).unwrap();
+    assert_eq!(2, clock.entities.len());
+    for mut entity in clock.entities {
+        match entity {
+            Entity::ConstantCombinator { .. } => {
+                entity.update_id(0);
+                let position = entity.position_mut();
+                position.y = base_y;
+                position.x = base_x;
+
+                blueprint.entities[0] = entity;
+            }
+            Entity::DeciderCombinator { .. } => {
+                entity.update_id(1);
+                let position = entity.position_mut();
+                position.y = base_y;
+                position.x = base_x + 1.5f32;
+
+                blueprint.entities[1] = entity;
+            }
+            _ => unreachable!()
+        }
+    }
+
+    blueprint.connect_wire(0, 1, Wire::Green).unwrap();
+    blueprint.connect_wire_with_side(
+        Connector { id: 1, side: Side::Two },
+        Connector { id: rows[0][0], side: Side::One },
+        Wire::Red,
+    ).unwrap();
 
     blueprint
 }
