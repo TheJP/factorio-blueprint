@@ -33,6 +33,7 @@ pub enum Entity {
         id: usize,
         position: model::Position,
         direction: model::Direction,
+        is_on: bool,
 
         connections: Vec<Connection>,
 
@@ -147,6 +148,7 @@ impl Into<model::Entity> for Entity {
                     arithmetic_conditions: None,
                     decider_conditions: Some(condition),
                     filters: None,
+                    is_on: None,
                 }),
                 connections: Connection::to_model(connections),
             },
@@ -166,6 +168,7 @@ impl Into<model::Entity> for Entity {
                     arithmetic_conditions: Some(condition),
                     decider_conditions: None,
                     filters: None,
+                    is_on: None,
                 }),
                 connections: Connection::to_model(connections),
             },
@@ -173,6 +176,7 @@ impl Into<model::Entity> for Entity {
                 id,
                 position,
                 direction,
+                is_on,
                 connections,
                 condition,
             } => model::Entity {
@@ -187,6 +191,8 @@ impl Into<model::Entity> for Entity {
                     filters:
                         if condition.is_empty() { None }
                         else { Some(condition) },
+                    // Leaving away the is_on attribute for constant combinators is interpreted as: "is_on": true
+                    is_on: if is_on { None } else { Some(false) },
                 }),
                 connections: Connection::to_model(connections),
             },
@@ -235,14 +241,16 @@ impl Entity {
     }
 
     fn constant_combinator(id: usize, e: model::Entity) -> Self {
+        let control_behavior = e.control_behavior.unwrap();
         Entity::ConstantCombinator {
             id,
             position: e.position,
             direction: e.direction.unwrap(),
+            is_on: control_behavior.is_on.unwrap_or(true),
 
             connections: Connection::from_model(e.connections),
 
-            condition: e.control_behavior.unwrap().filters.unwrap(),
+            condition: control_behavior.filters.unwrap(),
         }
     }
 

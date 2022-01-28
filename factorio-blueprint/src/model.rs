@@ -120,6 +120,9 @@ pub struct ControlBehavior {
 
     #[serde(default)]
     pub filters: Option<Vec<ConstantCondition>>,
+
+    #[serde(default)]
+    pub is_on: Option<bool>,
 }
 
 
